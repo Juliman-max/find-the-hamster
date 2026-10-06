@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find the Hamster</title>
+<style>
+:root {
+  --gold:#f7b928;
+  --gold-dark:#a86516;
+  --cream:#fff8e7;
+  --brown:#633817;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:linear-gradient(145deg,#75d2ff,#e8f8a4 48%,#ffd576);
+  color:#33261d;
+}
+.wrap { max-width:1150px; margin:auto; padding:18px; }
+.card {
+  background:var(--cream);
+  border:6px solid var(--gold-dark);
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:0 18px 50px rgba(0,0,0,.18);
+}
+.hero {
+  padding:20px;
+  text-align:center;
+  position:relative;
+  background:linear-gradient(#7bd8ff,#c6f0ff);
+  min-height:150px;
+}
+h1 {
+  margin:0;
+  font-size:clamp(36px,6vw,70px);
+  color:#ffb000;
+  text-shadow:0 4px 0 white,0 8px 0 #8a5120,0 12px 18px rgba(0,0,0,.22);
+}
+.hero p { margin:10px 0 0; font-weight:800; }
+.badge {
+  display:inline-block;
+  margin-top:10px;
+  padding:7px 13px;
+  border-radius:999px;
+  background:#fff;
+  border:2px dashed #a26a2b;
+  font-size:13px;
+  font-weight:900;
+}
+.code-box {
+  position:absolute;
+  right:18px;
+  bottom:14px;
+  background:#fff;
+  border:3px solid #8b5a22;
+  border-radius:12px;
+  padding:7px 10px;
+  box-shadow:0 3px 0 rgba(0,0,0,.12);
+  text-align:center;
+  font-weight:900;
+  min-width:170px;
+}
+.code-box .label {
+  font-size:10px;
+  letter-spacing:.8px;
+  color:#7a461e;
+}
+.code-box .code {
+  margin-top:2px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:14px;
+  letter-spacing:1.2px;
+}
+.layout {
+  display:grid;
+  grid-template-columns:320px 1fr;
+  gap:18px;
+  padding:18px;
+}
+.panel {
+  background:#fffdf5;
+  border:3px solid #d9a25c;
+  border-radius:20px;
+  padding:15px;
+}
+.panel h2 { margin:0 0 9px; color:#7a461e; }
+.rules { margin:0; padding-left:19px; line-height:1.45; }
+.notice {
+  margin-top:14px;
+  padding:10px;
+  border-radius:14px;
+  background:#f6ecd9;
+  border:2px solid #ddc39b;
+  text-align:center;
+  font-weight:900;
+}
+.status.win { background:#e3f8e1; border-color:#76c86e; }
+.status.lose { background:#ffe1e1; border-color:#dc7777; }
+.top {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
+.counter {
+  background:white;
+  border:3px solid #d9a25c;
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:1000;
+}
+button {
+  border:0;
+  cursor:pointer;
+  padding:10px 14px;
+  border-radius:13px;
+  background:linear-gradient(#ffd858,#f1a800);
+  color:#50300c;
+  font-weight:1000;
+  box-shadow:0 4px 0 #a9681c;
+}
+button:active { transform:translateY(2px); box-shadow:0 2px 0 #a9681c; }
+.grid {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:7px;
+  padding:7px;
+  background:#d69c3c;
+  border:4px solid #a9691d;
+  border-radius:20px;
+}
+.tile {
+  aspect-ratio:1;
+  border:2px solid #ae7e38;
+  border-radius:11px;
+  overflow:hidden;
+  position:relative;
+  background:#f8edcf;
+  cursor:pointer;
+  user-select:none;
+}
+.under {
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:clamp(18px,3.5vw,33px);
+  background:linear-gradient(#fffaf0,#f0cd86);
+}
+.scratch {
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  background:repeating-linear-gradient(135deg,#bdc0c5 0 9px,#aeb2b8 9px 18px);
+  transition:opacity .16s ease;
+}
+.revealed .scratch { opacity:0; pointer-events:none; }
+.pirate .under { background:linear-gradient(135deg,#1d2026,#5c2d31); }
+.disabled { cursor:not-allowed; }
+.small {
+  font-size:12px;
+  opacity:.78;
+  text-align:center;
+  padding:0 18px 18px;
+}
+@media(max-width:850px) {
+  .layout { grid-template-columns:1fr; }
+  .code-box {
+    position:static;
+    margin:14px auto 0;
+  }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="hero">
+      <h1>🔎 FIND THE HAMSTER</h1>
+      <p>Scratch 5 spots on the 7 × 7 board.</p>
+      <div class="badge">JUST FOR FUN — NO PRIZES</div>
+
+      <div class="code-box">
+        <div class="label">SCRATCH CARD CODE</div>
+        <div class="code" id="scratchCode">FTH-7X7-0000-00</div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="panel">
+        <h2>📜 Rules</h2>
+        <ol class="rules">
+          <li>Reveal exactly <b>5 spots</b>.</li>
+          <li>Find the hidden <b>Hamster 🐹</b> to complete the challenge.</li>
+          <li>There are <b>2 Pirate Hamsters</b> hidden on the board.</li>
+          <li>Finding a <b>Pirate Hamster = YOU LOSE.</b></li>
+          <li><b>There are no prizes or cash rewards.</b></li>
+        </ol>
+
+        <div id="status" class="notice">Find the hidden Hamster!</div>
+      </aside>
+
+      <main>
+        <div class="top">
+          <div class="counter">Revealed: <span id="count">0</span> / 5</div>
+          <button id="reset">🔄 New Board</button>
+        </div>
+        <div id="grid" class="grid" aria-label="Find the Hamster 7x7 board"></div>
+      </main>
+    </div>
+
+    <div class="small">
+      A fun digital game only — no purchases, no cash prizes, and no payouts.
+    </div>
+  </div>
+</div>
+
+<script>
+const BOARD = ["", "", "", "🌻", "", "", "", "🏴‍☠️🐹", "", "", "", "🌻", "", "", "", "", "💧", "", "", "", "", "", "🎡", "", "🐹", "", "", "", "", "🌻🌻", "", "", "", "", "", "💧", "", "", "", "", "", "🏴‍☠️🐹", "", "", "", "🎡", "", "", ""];
+const grid = document.getElementById("grid");
+const countEl = document.getElementById("count");
+const statusEl = document.getElementById("status");
+const resetBtn = document.getElementById("reset");
+
+let opened = new Set();
+let gameOver = false;
+
+function generateScratchCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "FTH-7X7-";
+  for (let i = 0; i < 4; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  code += "-";
+  for (let i = 0; i < 2; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+document.getElementById("scratchCode").textContent = generateScratchCode();
+
+function drawBoard() {
+  grid.innerHTML = "";
+  for (let i = 0; i < 49; i++) {
+    const tile = document.createElement("div");
+    tile.className = "tile";
+    if (BOARD[i] === "🏴‍☠️🐹") tile.classList.add("pirate");
+
+    const under = document.createElement("div");
+    under.className = "under";
+    under.textContent = BOARD[i] || "🐾";
+
+    const scratch = document.createElement("div");
+    scratch.className = "scratch";
+    scratch.textContent = "🐾";
+
+    tile.append(under, scratch);
+    tile.addEventListener("click", () => reveal(i, tile));
+    grid.appendChild(tile);
+  }
+}
+
+function reveal(i, tile) {
+  if (opened.has(i) || opened.size >= 5 || gameOver) return;
+
+  opened.add(i);
+  tile.classList.add("revealed");
+  countEl.textContent = opened.size;
+
+  if (BOARD[i] === "🏴‍☠️🐹") {
+    gameOver = true;
+    statusEl.className = "notice status lose";
+    statusEl.textContent = "🏴‍☠️🐹 PIRATE HAMSTER — YOU LOSE!";
+    lockBoard();
+    return;
+  }
+
+  if (BOARD[i] === "🐹") {
+    gameOver = true;
+    statusEl.className = "notice status win";
+    statusEl.textContent = "🐹 HAMSTER FOUND — YOU WIN THE CHALLENGE!";
+    lockBoard();
+    return;
+  }
+
+  if (opened.size === 5) {
+    gameOver = true;
+    statusEl.className = "notice status lose";
+    statusEl.textContent = "😿 The Hamster was not found — YOU LOSE.";
+    lockBoard();
+  } else {
+    statusEl.className = "notice";
+    statusEl.textContent = "Keep searching! Revealed " + opened.size + "/5.";
+  }
+}
+
+function lockBoard() {
+  document.querySelectorAll(".tile").forEach((tile, i) => {
+    if (!opened.has(i)) tile.classList.add("disabled");
+  });
+}
+
+resetBtn.addEventListener("click", () => {
+  opened.clear();
+  gameOver = false;
+  countEl.textContent = "0";
+  statusEl.className = "notice";
+  statusEl.textContent = "Find the hidden Hamster!";
+  drawBoard();
+  document.getElementById("scratchCode").textContent = generateScratchCode();
+});
+
+drawBoard();
+</script>
+</body>
+</html>
